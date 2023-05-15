@@ -19,16 +19,19 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Values.app.name }}
-          image: "{{ .Values.app.name }}:{{ $.Chart.Version }}"
+          image: "{{ .Values.app.image }}:{{ $.Chart.Version }}"
           ports:
           - containerPort: {{ .Values.app.port }}
           volumeMounts:
-          - mountPath: /usr/share/{{ .Values.app.name }}/html
+          - mountPath: /app/index.html
             name: {{ .Values.app.volume }}
+            subPath: index.html
           resources:
             {{- with .Values.app.resources }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
+      imagePullSecrets:
+        - name: docker-github
       volumes:
         - name: {{ .Values.app.volume }}
           configMap:

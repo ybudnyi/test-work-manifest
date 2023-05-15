@@ -1,7 +1,8 @@
 env: 
 app:
-  name: nginx
+  name: webserver
   volume: start-page
+  image: ghcr.io/ybudnyi/test-work-image
   replicas:
   resources:
     requests:
