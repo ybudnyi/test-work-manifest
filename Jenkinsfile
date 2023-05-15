@@ -1,10 +1,12 @@
 pipeline {
     agent any
     environment {
-    VERSION = '1.0'
-    BRANCH = 'main'
-    PRODUCT_REPO = "https://github.com/ybudnyi/test-work-image.git"
-    VCS_TOKEN = credentials('github')
+        APP = 'app'
+        TAG = 1
+        VERSION = '1.0'
+        BRANCH = 'main'
+        PRODUCT_REPO = "https://github.com/ybudnyi/test-work-manifest.git"
+        VCS_TOKEN = credentials('github')
   }
 options {
         disableConcurrentBuilds()
@@ -29,14 +31,14 @@ parameters{
             steps {
                 sh 'echo "Template STAGE env"'
                 if (fileExists('stage-values.yaml')) {
-                    sh "helm template -f int-values.yaml int-${JOB_BASE_NAME} ."
+                    sh "helm template -f stage-values.yaml stage-${APP} ."
                 }
                 echo "Template PROD env"
                 if (fileExists('prod-values.yaml')) {
-                    sh "helm template -f prod-values.yaml prod-${JOB_BASE_NAME} ."
+                    sh "helm template -f prod-values.yaml prod-${APP} ."
                 }
                 if (!fileExists('stage-values.yaml') && !fileExists('prod-values.yaml')) {
-                    sh "helm template ${JOB_BASE_NAME} ."
+                    sh "helm template ${APP} ."
                 }
 
             }
@@ -45,15 +47,16 @@ parameters{
             steps {
                 sh 'echo "Template STAGE env"'
                 if (fileExists('stage-values.yaml')) {
-                    sh "helm template -f int-values.yaml int-${JOB_BASE_NAME} ."
+                    sh "helm template -f stage-values.yaml stage-${APP} ."
                 }
                 echo "Template PROD env"
                 if (fileExists('prod-values.yaml')) {
-                    sh "helm template -f prod-values.yaml prod-${JOB_BASE_NAME} ."
+                    sh "helm template -f prod-values.yaml prod-${APP} ."
                 }
                 if (!fileExists('stage-values.yaml') && !fileExists('prod-values.yaml')) {
-                    sh "helm template ${JOB_BASE_NAME} ."
+                    sh "helm template ${APP} ."
 
+                }
             }
         }
         stage('Push HELM chart to Registry') {
@@ -67,6 +70,7 @@ parameters{
                     }
                 }
             }
+        }
     }
     post { 
         always { 
