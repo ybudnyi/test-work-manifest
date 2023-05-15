@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.app.name }}-config
+  namespace: {{ .Values.env }}-test
+data:
+  index.html: |
+    <html>
+    <h1>Welcome</h1>
+    </br>
+    <h1><p>It is test page</p></h1>
+    <h1><p>Deolyed app: {{ .Values.app.name }}</p></h1>
+    <h1><p>Deolyed version: {{ $.Chart.Version }}</p></h1>
+
+    

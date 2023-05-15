@@ -1,0 +1,13 @@
+env: 
+app:
+  name: nginx
+  volume: start-page
+  replicas:
+  resources:
+    requests:
+      memory: "250Mi"
+      cpu: "500m"
+    limits:
+      memory: "500Mi"
+      cpu: "1000m"
+  port: 9090

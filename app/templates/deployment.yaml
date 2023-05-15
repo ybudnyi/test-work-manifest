@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.app.name }}
+  namespace: {{ .Values.env }}-test
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels: 
+      app: {{ .Values.app.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.name }}
+    spec:
+      containers:
+        - name: {{ .Values.app.name }}
+          image: "{{ .Values.app.name }}:{{ $.Chart.Version }}"
+          ports:
+          - containerPort: {{ .Values.app.port }}
+          volumeMounts:
+          - mountPath: /usr/share/{{ .Values.app.name }}/html
+            name: {{ .Values.app.volume }}
+          resources:
+            {{- with .Values.app.resources }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: {{ .Values.app.volume }}
+          configMap:
+            name: {{ .Values.app.name }}-config
