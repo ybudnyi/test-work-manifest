@@ -11,3 +11,7 @@ app:
       memory: "500Mi"
       cpu: "1000m"
   port: 9090
+securityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001

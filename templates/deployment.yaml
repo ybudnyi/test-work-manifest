@@ -13,6 +13,10 @@ spec:
       labels:
         app: {{ .Values.app.name }}
     spec:
+      securityContext:
+      {{- with .Values.securityContext }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.app.name }}
           image: "{{ .Values.app.name }}:{{ $.Chart.Version }}"
