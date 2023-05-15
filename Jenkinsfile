@@ -2,11 +2,11 @@ pipeline {
     agent any
     environment {
         APP = 'app'
-        TAG = 1
         VERSION = '1.0'
         BRANCH = 'main'
         PRODUCT_REPO = "https://github.com/ybudnyi/test-work-manifest.git"
         VCS_TOKEN = credentials('github')
+        PATH="/usr/local/bin//build-dir:$PATH"
   }
 options {
         disableConcurrentBuilds()
@@ -23,58 +23,63 @@ parameters{
         }
         stage('SUBSTITUTE IMAGE TAAG') {
             steps {
-                sh 'envsubst < Chart > Chart.yaml'
+                sh '/usr/local/bin/envsubst < Chart > Chart.yaml'
                 sh 'cat Chart.yaml'
             }
         }
         stage('Lint HELM chart') {
             steps {
-                sh 'echo "Template STAGE env"'
-                if (fileExists('stage-values.yaml')) {
-                    sh "helm template -f stage-values.yaml stage-${APP} ."
+                script {
+                    sh 'echo "Template STAGE env"'
+                    if (fileExists('stage-values.yaml')) {
+                        sh "/usr/local/bin/helm template -f stage-values.yaml stage-${APP} ."
+                    }
+                    echo "Template PROD env"
+                    if (fileExists('prod-values.yaml')) {
+                        sh "/usr/local/bin/helm template -f prod-values.yaml prod-${APP} ."
+                    }
+                    if (!fileExists('stage-values.yaml') && !fileExists('prod-values.yaml')) {
+                        sh "/usr/local/bin/helm template ${APP} ."
+                    }
                 }
-                echo "Template PROD env"
-                if (fileExists('prod-values.yaml')) {
-                    sh "helm template -f prod-values.yaml prod-${APP} ."
-                }
-                if (!fileExists('stage-values.yaml') && !fileExists('prod-values.yaml')) {
-                    sh "helm template ${APP} ."
-                }
+
 
             }
         }
         stage('Template HELM chart for int and prod env') {
             steps {
-                sh 'echo "Template STAGE env"'
-                if (fileExists('stage-values.yaml')) {
-                    sh "helm template -f stage-values.yaml stage-${APP} ."
-                }
-                echo "Template PROD env"
-                if (fileExists('prod-values.yaml')) {
-                    sh "helm template -f prod-values.yaml prod-${APP} ."
-                }
-                if (!fileExists('stage-values.yaml') && !fileExists('prod-values.yaml')) {
-                    sh "helm template ${APP} ."
-
-                }
-            }
-        }
-        stage('Push HELM chart to Registry') {
-            steps {
-                sh "helm package ."
-                env.VERSION_NUMBER = "${VERSION}.${TAG}"
-                env.CHART = "app-${env.VERSION_NUMBER}.tgz"
-                withCredentials([usernamePassword(credentialsId: 'helm', passwordVariable: 'PASSWD', usernameVariable: 'USERNAME')]) {
-                    sh "helm registry login registry-1.docker.io -u ${USERNAME} -p ${PASSWD}"
-                    sh "helm push ${env.CHART} oci://registry-1.docker.io/docker"
+                script {
+                    sh 'echo "Template STAGE env"'
+                    if (fileExists('stage-values.yaml')) {
+                        sh "/usr/local/bin/helm template -f stage-values.yaml stage-${APP} ."
+                    }
+                    echo "Template PROD env"
+                    if (fileExists('prod-values.yaml')) {
+                        sh "/usr/local/bin/helm template -f prod-values.yaml prod-${APP} ."
+                    }
+                    if (!fileExists('stage-values.yaml') && !fileExists('prod-values.yaml')) {
+                        sh "/usr/local/bin/helm template ${APP} ."
                     }
                 }
+
             }
         }
-    }
+        stage('PUSH TO GIT') {
+            steps {
+                script {
+                    withCredentials([sshUserPrivateKey(credentialsId: "ssh-git", keyFileVariable: 'key')]) {
+                    sh 'git add .'
+                    sh 'git commit -am "Updated version number"'
+                    sh 'git push git@github.com:ybudnyi/test-work-manifest.git'
+                    }
+
+                }
+                }
+            }
+        }
     post { 
         always { 
             cleanWs()
-        }
+       }
     }
 }
